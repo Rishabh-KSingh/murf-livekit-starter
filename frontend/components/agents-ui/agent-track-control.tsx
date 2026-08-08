@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { LocalAudioTrack, LocalVideoTrack } from 'livekit-client';
 import {
@@ -147,8 +147,13 @@ function TrackDeviceSelect({
     onError: onMediaDeviceError,
   });
 
+  const prevDeviceIds = useRef<string>('');
   useEffect(() => {
-    onDeviceListChange?.(devices);
+    const currentDeviceIds = devices.map((d) => d.deviceId).join(',');
+    if (currentDeviceIds !== prevDeviceIds.current) {
+      prevDeviceIds.current = currentDeviceIds;
+      onDeviceListChange?.(devices);
+    }
   }, [devices, onDeviceListChange]);
 
   const handleOpenChange = (open: boolean) => {
