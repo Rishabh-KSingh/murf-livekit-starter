@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentProps, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
 import { Loader, MessageSquareTextIcon, SendHorizontal } from 'lucide-react';
 import { type MotionProps, motion } from 'motion/react';
@@ -239,6 +239,11 @@ export interface AgentControlBarProps extends UseInputControlsProps {
  *
  * @extends ComponentProps<'div'>
  */
+const CHAT_OPTIONS = { channelTopic: 'lk.chat' };
+
+/**
+ * Props for the AgentControlBar component.
+ */
 export function AgentControlBar({
   variant = 'default',
   controls,
@@ -251,9 +256,13 @@ export function AgentControlBar({
   className,
   ...props
 }: AgentControlBarProps & ComponentProps<'div'>) {
-  const { send } = useChat();
+  const { send } = useChat(CHAT_OPTIONS);
   const publishPermissions = usePublishPermissions();
   const [isChatOpenUncontrolled, setIsChatOpenUncontrolled] = useState(isChatOpen);
+  const inputControlOptions = useMemo(
+    () => ({ onDeviceError, saveUserChoices }),
+    [onDeviceError, saveUserChoices]
+  );
   const {
     microphoneTrack,
     cameraToggle,
@@ -263,10 +272,11 @@ export function AgentControlBar({
     handleVideoDeviceChange,
     handleMicrophoneDeviceSelectError,
     handleCameraDeviceSelectError,
-  } = useInputControls({ onDeviceError, saveUserChoices });
+  } = useInputControls(inputControlOptions);
 
   const handleSendMessage = async (message: string) => {
-    await send(message);
+    if (!message || !message.trim()) return;
+    await send(message.trim());
   };
 
   const visibleControls = {
